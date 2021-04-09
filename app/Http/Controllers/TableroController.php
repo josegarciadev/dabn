@@ -18,6 +18,7 @@ class TableroController extends Controller
 
     public function CrearTablero(Request $request){
     	$uid=$this->Autenticartoken->validarTokenUser($request->header('Authorization'));
+
     	if ($uid == "Unauthenticated") {
     		return \Response::json('Operacion no valida',422);
     	}
@@ -39,6 +40,24 @@ class TableroController extends Controller
         $tablero->estado=3;
         // estado 3 es igual a Espera
     	$tablero->save();
-    	return $tablero;
+        $tablerosDisponibles=Tablero::where('estado',3)
+                                    ->get()
+                                    ->count();
+        $tablerosUsados=Tablero::where('estado',4)
+                                    ->get()
+                                    ->count();
+
+    	return \Response::json(['Resultado'=>'Ok','tablerosDisponibles'=>$tablerosDisponibles,"tablerosUsados"=>$tablerosUsados]);
+    }
+
+    public function ListaTablerosPorSala($id,Request $request){
+        $uid=$this->Autenticartoken->validarTokenUser($request->header('Authorization'));
+        if ($uid == "Unauthenticated") {
+            return \Response::json('Operacion no valida',422);
+        }
+        $tableros= Tablero::latest('sala_id')
+                            ->where('sala_id',$id)
+                            ->paginate();
+        return $tableros;
     }
 }

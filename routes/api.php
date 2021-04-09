@@ -22,3 +22,4 @@ use Illuminate\Support\Facades\Route;
 });*/
 Route::get('/ListaSalas', [SalaController::class,'ListaSalas']);
 Route::post('/CrearTablero',[TableroController::class,'CrearTablero']);
+Route::get('/ListaTablerosPorSala/{id}',[TableroController::class,'ListaTablerosPorSala']);
