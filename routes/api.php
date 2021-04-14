@@ -23,3 +23,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/ListaSalas', [SalaController::class,'ListaSalas']);
 Route::post('/CrearTablero',[TableroController::class,'CrearTablero']);
 Route::get('/ListaTablerosPorSala/{id}',[TableroController::class,'ListaTablerosPorSala']);
+Route::post('/CrearJuego',[TableroController::class,'CrearJuego']);
+Route::get('/VerJuego/{id}',[TableroController::class,'VerJuego']);
+Route::post('/Jugada',[TableroController::class,'Jugada']);
+Route::get('/PerfilJugador/{id}',[TableroController::class,'PerfilJugador']);
+Route::get('/historialTableroId/{id}',[TableroController::class,'historialTableroId']);

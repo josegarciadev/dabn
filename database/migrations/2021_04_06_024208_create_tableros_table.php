@@ -15,7 +15,7 @@ class CreateTablerosTable extends Migration
     {
         Schema::create('tableros', function (Blueprint $table) {
             $table->id();
-            $table->string('tablero');
+            $table->text('tablero');
             $table->unsignedBigInteger('sala_id');
             $table->string('turno')->nullable();
             $table->string('movimientos')->nullable();
@@ -27,9 +27,11 @@ class CreateTablerosTable extends Migration
             $table->string('ganador')->nullable();
             $table->integer('x_tablero');
             $table->integer('y_tablero');
+            $table->unsignedBigInteger('duenio');
             $table->foreign('sala_id')->references('id')->on('salas');
             $table->foreign('j2')->references('id')->on('perfil_publico');
             $table->foreign('j1')->references('id')->on('perfil_publico');
+            $table->foreign('duenio')->references('id')->on('perfil_publico');
             $table->foreign('estado')->references('id')->on('estado');
             $table->timestamps();
         });
