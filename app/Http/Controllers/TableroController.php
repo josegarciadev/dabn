@@ -80,7 +80,6 @@ class TableroController extends Controller
             return \Response::json(['resultado'=>'Sala encontrada'],422);
         }
 
-        return "sala existe";
     	$user = TableroController::getUsuario($uid);
         if ($user->isEmpty()) {
             $createdUser = new Perfil_Publico;
