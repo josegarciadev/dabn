@@ -81,12 +81,7 @@ class TableroController extends Controller
         }
 
     	$user = TableroController::getUsuario($uid);
-        if ($user->isEmpty()) {
-            $createdUser = new Perfil_Publico;
-            $createdUser->uid = $uid;
-            $createdUser->save();
-            $user = TableroController::getUsuario($uid);
-        }
+
     	$tablero= new Tablero;
         for ($i=0; $i<$request->input('x') ; $i++) {
 
@@ -539,7 +534,17 @@ class TableroController extends Controller
      }
 
     public function getUsuario($uid){
-        return Perfil_Publico::where('uid', $uid)->get();
+        $user = Perfil_Publico::where('uid', $uid)->get();
+
+        if ($user->isEmpty()) {
+            $createdUser = new Perfil_Publico;
+            $createdUser->uid = $uid;
+            $createdUser->save();
+            $user = TableroController::getUsuario($uid);
+        }
+
+        return $user;
+
     }
 
 }
