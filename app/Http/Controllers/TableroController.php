@@ -83,9 +83,11 @@ class TableroController extends Controller
     	$user = TableroController::getUsuario($uid);
 
     	$tablero= new Tablero;
+        $tableroLogicoMinimo = "";
         for ($i=0; $i<$request->input('x') ; $i++) {
 
             for ($j=0; $j < $request->input('y') ; $j++) {
+                $tableroLogicoMinimo.="0" ;
                 $tableroLogico[$i][$j]=[
                     'x'=>$i,
                     'y'=>$j
@@ -93,15 +95,17 @@ class TableroController extends Controller
             }
         }
 
-    	$tablero->tablero=json_encode($tableroLogico);
+    	$tablero->tablero=$tableroLogicoMinimo;
     	$tablero->sala_id=$request->input('sala_id');
     	$tablero->j1=$user[0]->id;
         $tablero->movimientos=0;
-        $tablero->tablero=0;
+        //Este tablero sobre escribe el encoding de arriba
+        //$tablero->tablero=0;
     	$tablero->x_tablero=$request->input('x');
     	$tablero->y_tablero=$request->input('y');
         $tablero->j2puntos=0;
         $tablero->j1puntos=0;
+        //Este estado debe venir del parametrizado en la base de datos
         $tablero->estado=3;
         $tablero->duenio=$user[0]->id;
 
@@ -157,6 +161,7 @@ class TableroController extends Controller
     * )
     */
 
+    //Falta la paginacion
     public function ListaTablerosPorSala($id,Request $request){
         $uid=$this->Autenticartoken->validarTokenUser($request->header('Authorization'));
         if ($uid == "Unauthenticated") {
@@ -164,13 +169,11 @@ class TableroController extends Controller
         }
        $user = TableroController::getUsuario($uid);
 
-        $tableros= Tablero::latest('id')
-                            ->where('sala_id',$id)
-                            ->where('j1','!=',$user[0]->id)
-                            ->get();
+       //me interesa una lista con todos los tableros de esa sala
+        $tableros= Tablero::where('sala_id',$id)->get();
 
         if ($tableros->isEmpty()) {
-            return \Response::json(['resultado'=>'No hay tableros con este ID'],422);
+            return \Response::json(['resultado'=>'No hay tableros con ID: '.$id],422);
         }
        foreach ($tableros as $tablero => $value) {
         $resultado[$tablero]=[
@@ -222,15 +225,18 @@ class TableroController extends Controller
             return \Response::json('Operacion no valida',401);
         }
 
-        $tablero=Tablero::find($request->input('idTablero'));
+        $idTablero = $request->input('idTablero');
+        $tablero=Tablero::find($idTablero);
         $user = TableroController::getUsuario($uid);
+
         if (!$tablero) {
-            return \Response::json(['resultado'=>'Tablero no existe'],422);
+            return \Response::json(['resultado'=>'Tablero ('.$idTablero.') no existe'],422);
         }
 
         if ($tablero->duenio == $user[0]->id) {
             return \Response::json(['resultado'=>'Error j1 y j2 son el mismo jugador'],404);
-         }
+        }
+         
         $tablero->j2=$user[0]->id;
         $tablero->j2puntos=0;
         $tablero->turno=$tablero->j1;
@@ -293,7 +299,9 @@ class TableroController extends Controller
     * )
     */
     public function VerJuego($id,Request $request){
+
         $uid=$this->Autenticartoken->validarTokenUser($request->header('Authorization'));
+
         if ($uid == "Unauthenticated") {
             return \Response::json('Operacion no valida',401);
         }
@@ -304,7 +312,7 @@ class TableroController extends Controller
         if ($tablero->estado==3) {
             return \Response::json(['resultado'=>'Tablero en espera, necesita un tablero activo'],404);
         }
-        $tablero->tablero=json_decode($tablero->tablero,true);
+        //$tablero->tablero=json_decode($tablero->tablero,true);
         $verJuego=[
             'id'=>$tablero->id,
             'Tamanio'=>$tablero->x_tablero.'x'.$tablero->y_tablero,
@@ -351,14 +359,16 @@ class TableroController extends Controller
 
     public function Jugada(Request $request){
         $uid=$this->Autenticartoken->validarTokenUser($request->header('Authorization'));
+
         if ($uid == "Unauthenticated") {
             return \Response::json('Operacion no valida',401);
         }
-        $tablero= Tablero::find($request->input('id'));
+
+        $tablero= Tablero::find($request->input('idTablero'));
         if (!$tablero) {
             return \Response::json(['resultado'=>'Tablero no encontrado'],422);
         }
-
+        //antipatron numeros magicos
         if ($tablero->estado==3) {
             return \Response::json(['resultado'=>'Tablero en espera, necesita un tablero activo'],404);
         }
@@ -368,6 +378,7 @@ class TableroController extends Controller
         if ($tablero->estado==4) {
             return \Response::json(['resultado'=>'Tablero Finalizado'],404);
         }
+
         $user = TableroController::getUsuario($uid);
         if ($tablero->turno != $user[0]->id) {
             return \Response::json(['resultado'=>'No puedes mover, no es tu turno','jugadorIdTurno'=>$tablero->turno],404);
@@ -382,8 +393,8 @@ class TableroController extends Controller
         }
 
 
-        $x=$request->input('x')-1;
-        $y=$request->input('y')-1;
+        $x=$request->input('x');
+        $y=$request->input('y');
         $historial=[
             'x'=>$x,
             'y'=>$y,
@@ -398,19 +409,24 @@ class TableroController extends Controller
         if (!$comprobar_historial->isEmpty()) {
             return \Response::json(['resultado'=>'Este movimiento ya fue realizado'],404);
         }
+
+        //Se recomienda bloquear el tablero antes
         $tablero->estado=2;
         $tablero->movimientos=+1;
         $tablero->update();
         $historial_tablero=Historial_Tablero::create($historial);
 
         $tablero->estado=1;
-         if ($tablero->turno==$tablero->j1) {
+
+        //Aqui van reglas de negocio 
+        if ($tablero->turno==$tablero->j1) {
             $tablero->j1puntos=+1;
             $tablero->turno=$tablero->j2;
         }else{
             $tablero->j2puntos=+1;
             $tablero->turno=$tablero->j1;
         }
+
         $tablero->update();
         return \Response::json(['resultado'=>'ok','estado'=>'activo','jugadorIdTurno'=>$tablero->turno],200);
     }
@@ -482,6 +498,7 @@ class TableroController extends Controller
         ];
         return $perfil_user;
     }
+
     /**
     * @OA\Get(
     *     path="/api/historialTableroId/{id}",
@@ -533,6 +550,10 @@ class TableroController extends Controller
         return $historial;
      }
 
+     /**
+     * @deprecated se movio la responsabilidad al controlador de perfil publico
+     * @PerfilPublicoController::getUsuario
+     */
     public function getUsuario($uid){
         $user = Perfil_Publico::where('uid', $uid)->get();
 
