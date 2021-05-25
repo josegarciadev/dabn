@@ -84,16 +84,10 @@ class TableroController extends Controller
 
     	$tablero= new Tablero;
         $tableroLogicoMinimo = "";
-        for ($i=0; $i<$request->input('x') ; $i++) {
+        $x = $request->input('x');
+        $y = $request->input('y');
 
-            for ($j=0; $j < $request->input('y') ; $j++) {
-                $tableroLogicoMinimo.="0" ;
-                $tableroLogico[$i][$j]=[
-                    'x'=>$i,
-                    'y'=>$j
-                ];
-            }
-        }
+        $tableroLogicoMinimo = $tablero->crearTableroMinimo($x,$y);
 
     	$tablero->tablero=$tableroLogicoMinimo;
     	$tablero->sala_id=$request->input('sala_id');
@@ -101,8 +95,8 @@ class TableroController extends Controller
         $tablero->movimientos=0;
         //Este tablero sobre escribe el encoding de arriba
         //$tablero->tablero=0;
-    	$tablero->x_tablero=$request->input('x');
-    	$tablero->y_tablero=$request->input('y');
+    	$tablero->x_tablero=$x;
+    	$tablero->y_tablero=$y;
         $tablero->j2puntos=0;
         $tablero->j1puntos=0;
         //Este estado debe venir del parametrizado en la base de datos
@@ -416,7 +410,7 @@ class TableroController extends Controller
         $tablero->update();
         $historial_tablero=Historial_Tablero::create($historial);
 
-        $tablero->estado=1;
+        $cuadroCompleto = $tablero->
 
         //Aqui van reglas de negocio 
         if ($tablero->turno==$tablero->j1) {
@@ -427,6 +421,7 @@ class TableroController extends Controller
             $tablero->turno=$tablero->j1;
         }
 
+        $tablero->estado=1;
         $tablero->update();
         return \Response::json(['resultado'=>'ok','estado'=>'activo','jugadorIdTurno'=>$tablero->turno],200);
     }

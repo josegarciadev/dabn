@@ -22,68 +22,99 @@ class Tablero extends Model
 
     }
 
-    public function turno($tablero,$jugador1,$jugador2){
+    public function crearTableroMinimo($x,$y){
+        $TableroMinimo = '';
+        for ( $i = 0; $i < $x - 1; $i++)
+        {
+            for ( $j = 0; $j < $y - 1; $j++)
+            {
+                $TableroMinimo.='no,no,no|';
+            }
+        }
+        return $TableroMinimo;
+    }
+
+    public function transformarTableroLogicoAMinimo($_Puntos,$x,$y){
+        $TableroMinimo = '';
+        for ( $i = 0; $i < $x - 1; $i++)
+        {
+            for ( $j = 0; $j < $y - 1; $j++)
+            {
+                $TableroMinimo.=$_Puntos[$i][$j]->LadoEstaCompleto.','.$_Puntos[$i][$j]->ArribaEstaCompleto.','.$_Puntos[$i][$j]->PuntoEstaCompleto.'|';
+            }
+        }
 
     }
 
-    public function transformarTableroMinimoALogico($tableroMinimo){
+    public function transformarTableroMiniALogico($tableroMinimo,$x,$y){
 
-    }
+       $puntosList = explode('|',$tableroMinimo);
+       
 
-    public function transformarTableroMiniALogico($tableroLogico){
+       for ( $i = 0; $i < $x - 1; $i++)
+        {
+            for ( $j = 0; $j < $y - 1; $j++)
+            {
+                $punto =  explode(',',$puntosList);
+                $TableroLogico[$i][$j] = new PuntoDatos;
+                $TableroLogico[$i][$j]->LadoEstaCompleto = $punto[0];
+                $TableroLogico[$i][$j]->ArribaEstaCompleto = $punto[1];
+                $TableroLogico[$i][$j]->PuntoEstaCompleto = $punto[2];
+            }
+        }
 
     }
 }
 
 class PuntoDatos{
-    $LadoEstaCompleto = 'no';
-    $ArribaEstaCompleto = 'no';
-    $PuntoEstaCompleto = 'no';
+    public $LadoEstaCompleto = 'no';
+    public $ArribaEstaCompleto = 'no';
+    public $PuntoEstaCompleto = 'no';
 
-    public __construct PuntoDatos($Lado = false,$Arriba = false,$Punto = "no") {
-        $this->$LadoEstaCompleto = $Lado?"5000":"no";
-        $this->$ArribaEstaCompleto = $Lado ? "5000" : "no";
-        $this->$PuntoEstaCompleto = $Punto;
+    public function __construct ($Lado = false,$Arriba = false,$Punto = "no") {
+        $this->LadoEstaCompleto = $Lado? "5000" : "no";
+        $this->ArribaEstaCompleto = $Arriba ? "5000" : "no";
+        $this->PuntoEstaCompleto = $Punto;
     }
 
-    public function EstaArribaActivo()
+    public function EstaArribaActivo(PuntoDatos $punto)
     {
-
-        return !($this->$ArribaEstaCompleto === 'no');
+        return !($punto->ArribaEstaCompleto == 'no');
     }
 
-    public function EstaLadoActivo()
+    public function EstaLadoActivo(PuntoDatos $punto)
     {
-        return !($this->LadoEstaCompleto === 'no');
+        return !($punto->LadoEstaCompleto == 'no');
     }
 
-    public function EstaPuntoCompleto()
+    public function EstaPuntoCompleto(PuntoDatos $punto)
     {
-        return $this->PuntoEstaCompleto;
+        return !($punto->PuntoEstaCompleto == 'no');
     }
 
-    public function VerificarPuntoCompleto($i, $j, $_Puntos,$x, $y)
+    public function VerificarPuntoCompleto($i, $j,$_Puntos,$x, $y)
     {
-        // Debug.Log("verifico "+i+j + " "+x+y);
-        if (i == x - 1 || j == y - 1)
+        if ($i == $x - 1 || $j == $y - 1)
             return false;
 
-        return _Puntos[i, j].EstaPuntoCompleto().Equals("no") &&
-                           _Puntos[i, j].EstaLadoActivo() &&
-                           _Puntos[i, j].EstaArribaActivo() &&
-                           i < x - 1 &&
-                           _Puntos[i + 1, j].EstaArribaActivo() &&
-                           j < y - 1 &&
-                           _Puntos[i, j + 1].EstaLadoActivo() ? true : false;
+        return  EstaPuntoCompleto($_Puntos[$i][$j]) &&
+                EstaLadoActivo($_Puntos[$i][$j])  &&
+                EstaArribaActivo($_Puntos[$i][$j]) &&
+                $i < $x - 1 &&
+                EstaArribaActivo($_Puntos[$i + 1][$j]) &&
+                $j < $y - 1 &&
+                EstaLadoActivo($_Puntos[$i][$j + 1]) ? true : false;
+
+                //return false;
     }
 
-    public function VerificarFinDeJuego(PuntoDatos[,] _Puntos, int x, int y) {
+    public function VerificarFinDeJuego($_Puntos, $x, $y) {
 
-        for (int i = 0; i < x - 1; i++)
+        for ( $i = 0; $i < $x - 1; $i++)
         {
-            for (int j = 0; j < y - 1; j++)
+            for ( $j = 0; $j < $y - 1; $j++)
             {
-                if (_Puntos[i, j].EstaPuntoCompleto().Equals("no"))
+                if ($this->EstaPuntoCompleto( $_Puntos[$i][$j] ))
                 {
                     return false;
                 }
