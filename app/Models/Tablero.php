@@ -18,15 +18,44 @@ class Tablero extends Model
     	return $this->belongsToMany(Historial_Tablero::class,'historial_tableros','tablero','id');
     }
 
-    public function esFinDeJuego($tablero){
+    public static function Jugada($i,$j,$raya,$jugadorActualSkin,$_Puntos, $x, $y) {
 
+        if($raya === 'LADO'){
+            $_Puntos[$i][$j]->LadoEstaCompleto = $jugadorActualSkin;
+        }else if($raya === 'ARRIBA'){
+            $_Puntos[$i][$j]->ArribaEstaCompleto = $jugadorActualSkin;
+        } 
+        return $_Puntos;
     }
 
-    public function crearTableroMinimo($x,$y){
+    public static function PuntoCompleto($i,$j,$jugadorActualSkin,$_Puntos, $x, $y) {
+        //Funciona con fe falta validar los limites (x,y,x+1,y+1) 
+        $_Puntos[$i][$j]->PuntoEstaCompleto = $jugadorActualSkin;
+        return $_Puntos;
+    }
+
+    //TO DO Actualizar para que funcione con 4 jugadores
+    public static function CambiarTurno($turno,$j1,$j2){
+        return $turno == $j1 ? $j2:$j1;
+    }
+
+    public static function VerificarFinDeJuego($_Puntos, $x, $y) {
+        $p = new PuntoDatos;
+
+        return $p->VerificarFinDeJuego($_Puntos, $x, $y);
+    }
+
+    public static function VerificarPuntoCompleto($i, $j,$_Puntos,$x, $y){
+        $p = new PuntoDatos;
+
+        return $p->VerificarPuntoCompleto($i, $j,$_Puntos,$x, $y);
+    }
+
+    public static function crearTableroMinimo($x,$y){
         $TableroMinimo = '';
-        for ( $i = 0; $i < $x - 1; $i++)
+        for ( $i = 0; $i < $x ; $i++)
         {
-            for ( $j = 0; $j < $y - 1; $j++)
+            for ( $j = 0; $j < $y ; $j++)
             {
                 $TableroMinimo.='no,no,no|';
             }
@@ -34,36 +63,39 @@ class Tablero extends Model
         return $TableroMinimo;
     }
 
-    public function transformarTableroLogicoAMinimo($_Puntos,$x,$y){
+    public static function transformarTableroLogicoAMinimo($_Puntos,$x,$y){
         $TableroMinimo = '';
-        for ( $i = 0; $i < $x - 1; $i++)
+        for ( $i = 0; $i < $x ; $i++)
         {
-            for ( $j = 0; $j < $y - 1; $j++)
+            for ( $j = 0; $j < $y ; $j++)
             {
                 $TableroMinimo.=$_Puntos[$i][$j]->LadoEstaCompleto.','.$_Puntos[$i][$j]->ArribaEstaCompleto.','.$_Puntos[$i][$j]->PuntoEstaCompleto.'|';
             }
         }
-
+        return $TableroMinimo;
     }
 
-    public function transformarTableroMiniALogico($tableroMinimo,$x,$y){
+    public static function transformarTableroMinimoALogico($tableroMinimo,$x,$y){
 
        $puntosList = explode('|',$tableroMinimo);
        
 
-       for ( $i = 0; $i < $x - 1; $i++)
+       for ( $i = 0; $i < $x ; $i++)
         {
-            for ( $j = 0; $j < $y - 1; $j++)
+            for ( $j = 0; $j < $y ; $j++)
             {
-                $punto =  explode(',',$puntosList);
+                $punto =  explode(',',$puntosList[($i*$x)+$j]);
                 $TableroLogico[$i][$j] = new PuntoDatos;
                 $TableroLogico[$i][$j]->LadoEstaCompleto = $punto[0];
                 $TableroLogico[$i][$j]->ArribaEstaCompleto = $punto[1];
                 $TableroLogico[$i][$j]->PuntoEstaCompleto = $punto[2];
             }
         }
+        return $TableroLogico;
 
     }
+
+
 }
 
 class PuntoDatos{
@@ -77,19 +109,19 @@ class PuntoDatos{
         $this->PuntoEstaCompleto = $Punto;
     }
 
-    public function EstaArribaActivo(PuntoDatos $punto)
+    public function EstaArribaActivo($punto)
     {
-        return !($punto->ArribaEstaCompleto == 'no');
+        return $punto->ArribaEstaCompleto != 'no';
     }
 
-    public function EstaLadoActivo(PuntoDatos $punto)
+    public function EstaLadoActivo($punto)
     {
-        return !($punto->LadoEstaCompleto == 'no');
+        return $punto->LadoEstaCompleto != 'no';
     }
 
-    public function EstaPuntoCompleto(PuntoDatos $punto)
+    public function EstaPuntoCompleto($punto)
     {
-        return !($punto->PuntoEstaCompleto == 'no');
+        return $punto->PuntoEstaCompleto != 'no';
     }
 
     public function VerificarPuntoCompleto($i, $j,$_Puntos,$x, $y)
@@ -97,15 +129,13 @@ class PuntoDatos{
         if ($i == $x - 1 || $j == $y - 1)
             return false;
 
-        return  EstaPuntoCompleto($_Puntos[$i][$j]) &&
-                EstaLadoActivo($_Puntos[$i][$j])  &&
-                EstaArribaActivo($_Puntos[$i][$j]) &&
+        return  $this->EstaLadoActivo($_Puntos[$i][$j])  &&
+                $this->EstaArribaActivo($_Puntos[$i][$j]) &&
                 $i < $x - 1 &&
-                EstaArribaActivo($_Puntos[$i + 1][$j]) &&
+                $this->EstaArribaActivo($_Puntos[$i + 1][$j]) &&
                 $j < $y - 1 &&
-                EstaLadoActivo($_Puntos[$i][$j + 1]) ? true : false;
+                $this->EstaLadoActivo($_Puntos[$i][$j + 1]) ? true : false;
 
-                //return false;
     }
 
     public function VerificarFinDeJuego($_Puntos, $x, $y) {
@@ -122,4 +152,6 @@ class PuntoDatos{
         }
         return true;
     }
+
+
 }
