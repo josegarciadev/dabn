@@ -358,10 +358,12 @@ class TableroController extends Controller
             return \Response::json('Operacion no valida',401);
         }
 
-        $tablero= Tablero::find($request->input('idTablero'));
+        $tableroId = $request->input('idTablero');
+        $tablero= Tablero::find($tableroId);
         $x=$request->input('x');
         $y=$request->input('y');
         $raya=$request->input('raya');
+        $jugadorSkin=$request->input('skinId');
 
         if (!$tablero) {
             return \Response::json(['resultado'=>'Tablero no encontrado'],422);
@@ -378,9 +380,9 @@ class TableroController extends Controller
         }
 
         $user = TableroController::getUsuario($uid);
-        if ($tablero->turno != $user[0]->id) {
+        /*if ($tablero->turno != $user[0]->id) {
             return \Response::json(['resultado'=>'No puedes mover, no es tu turno','jugadorIdTurno'=>$tablero->turno],404);
-        }
+        }*/
 
 
         if ($tablero->x_tablero<$x) {
@@ -398,13 +400,13 @@ class TableroController extends Controller
             'turno'=>$tablero->turno,
             'movimiento'=>$tablero->movimientos
         ];
-        $comprobar_historial=Historial_Tablero::where('tablero',$tablero->id)
+       /* $comprobar_historial=Historial_Tablero::where('tablero',$tablero->id)
                                                 ->where('x',$x)
                                                 ->where('y',$y)
                                                 ->get();
         if (!$comprobar_historial->isEmpty()) {
             return \Response::json(['resultado'=>'Este movimiento ya fue realizado'],403);
-        }
+        }*/
 
 
         $tablero->estado=2;
@@ -412,14 +414,14 @@ class TableroController extends Controller
         //Falta agregar los skin al perfil de jugador
         $skinList = ["1","2","5000"];
         $turnoActual = $tablero->turno;
-        $jugadorSkin = $turnoActual == $tablero->j1 ? $skinList[0]:$skinList[1];
+        if($jugadorSkin.isEmpty()){
+            $jugadorSkin = $turnoActual == $tablero->j1 ? $skinList[0]:$skinList[1];
+        }
         $esFinDeJuego = false;
 
         $tableroLogico = Tablero::transformarTableroMinimoALogico($tablero->tablero,$tablero->x_tablero,$tablero->y_tablero);
         $tableroLogico = Tablero::Jugada($x,$y,$raya,$jugadorSkin,$tableroLogico,$tablero->x_tablero,$tablero->y_tablero);
         $puntoCompleto = Tablero::VerificarPuntoCompleto($x,$y,$tableroLogico,$tablero->x_tablero,$tablero->y_tablero);
-
-        dd($tableroLogico);
 
         if($puntoCompleto){
 
@@ -441,9 +443,10 @@ class TableroController extends Controller
         }
 
         $tableroMinimoActualizado = Tablero::transformarTableroLogicoAMinimo($tableroLogico,$tablero->x_tablero,$tablero->y_tablero);
-        $tablero->tableto=$tableroMinimoActualizado;
+        
+        $tablero->tablero=$tableroMinimoActualizado;
         $tablero->movimientos=+1;
-
+        
         if($esFinDeJuego){
             //Recalcular puntos de jugadores para determinar el ganador
             if($tablero->j1puntos > $tablero->j2puntos){
@@ -455,9 +458,8 @@ class TableroController extends Controller
         }else{
             $tablero->estado=1;
         }
-
         $tablero->update();
-        $historial_tablero=Historial_Tablero::create($historial);
+        //$historial_tablero=Historial_Tablero::create($historial);
         return \Response::json(['resultado'=>'ok','estado'=>'activo','jugadorIdTurno'=>$tablero->turno],200);
     }
     /**
