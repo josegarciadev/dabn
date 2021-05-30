@@ -6,5 +6,5 @@ use Illuminate\Http\Request;
 
 class HistorialTableroController extends Controller
 {
-    public function historialTableroID($id,){}
+    //public function historialTableroID($id,){}
 }
