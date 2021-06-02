@@ -34,7 +34,7 @@ class Tablero extends Model
         return $_Puntos;
     }
 
-    //TO DO Actualizar para que funcione con 4 jugadores
+    //TODO Actualizar para que funcione con 4 jugadores
     public static function CambiarTurno($turno,$j1,$j2){
         return $turno == $j1 ? $j2:$j1;
     }

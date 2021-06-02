@@ -365,8 +365,9 @@ class TableroController extends Controller
         $raya=$request->input('raya');
         $jugadorSkin=$request->input('skinId');
 
+
         if (!$tablero) {
-            return \Response::json(['resultado'=>'Tablero no encontrado'],422);
+            return \Response::json(['resultado'=>'Tablero ('.$tableroId.') no encontrado'],422);
         }
         //antipatron numeros magicos
         if ($tablero->estado==3) {
@@ -414,7 +415,8 @@ class TableroController extends Controller
         //Falta agregar los skin al perfil de jugador
         $skinList = ["1","2","5000"];
         $turnoActual = $tablero->turno;
-        if($jugadorSkin.isEmpty()){
+
+        if($jugadorSkin == null){
             $jugadorSkin = $turnoActual == $tablero->j1 ? $skinList[0]:$skinList[1];
         }
         $esFinDeJuego = false;
@@ -460,7 +462,7 @@ class TableroController extends Controller
         }
         $tablero->update();
         //$historial_tablero=Historial_Tablero::create($historial);
-        return \Response::json(['resultado'=>'ok','estado'=>'activo','jugadorIdTurno'=>$tablero->turno],200);
+        return \Response::json(['resultado'=>'ok','estado'=>'activo','jugadorIdTurno'=>$tablero->turno,'tablero'=>$tablero->tablero],200);
     }
     /**
     * @OA\Get(
